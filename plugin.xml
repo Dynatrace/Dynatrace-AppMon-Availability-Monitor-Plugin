@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<!-- plugin.xml file written by dynaTrace Client 4.1.0 -->
+<plugin>
+  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.mycompany.myplugin.AM" name="Availability Monitor">
+    <information>
+      <category value="" />
+      <description value="Does a ping check to make sure that a host is available." />
+      <supportlevel value="unsupported" />
+      <displayname value="Availability Monitor" />
+    </information>
+    <configuration>
+      <property key="doTCPCheck" label="TCP Check" type="boolean" description="If checked the plugin will check to see if a TCP connection can be made to the specified server." default="false" />
+      <property key="ReturnTime" label="Max TCP Return Time" type="string" description="The max allowed time for the response to the ping in ms." default="500">
+        <visibility>
+          <rule key="doTCPCheck" value="true" />
+        </visibility>
+      </property>
+    </configuration>
+  </extension>
+  <extension point="com.dynatrace.diagnostics.pdk.monitor" id="com.mycompany.myplugin.AM.monitor" name="Availability Monitor">
+    <plugin configid="com.mycompany.myplugin.AM" class="com.mycompany.myplugin.AM" />
+  </extension>
+  <extension point="com.dynatrace.diagnostics.pdk.monitormetricgroup" id="com.mycompany.myplugin.AM.monitor.metricgroup2" name="Availability Monitor">
+    <metricgroup monitorid="com.mycompany.myplugin.AM.monitor">
+      <metric defaultrate="purepath" name="TCP Check" unit="number" description="Returns a 1 if the server is reachable on TCP port 7 and a 0 if the server is not reachable" />
+      <metric defaultrate="purepath" name="TCP Lock Time" unit="ms" description="Returns the time taken to secure a Socket Lock on TCP Port 7" />
+      <metric defaultrate="purepath" name="DNS Resolved" unit="number" description="Returns a 1 if the server DNS name is resolvable and a 0 if the server is not resolvable" />
+      <metric defaultrate="purepath" name="Reverse DNS Resolved" unit="number" description="Returns a 1 if the server DNS name is resolvable and a 0 if the server is not resolvable" />
+      <metric defaultrate="purepath" name="Ping Check" unit="number" description="Returns a 1 if the ping to the server was successful" />
+    </metricgroup>
+  </extension>
+</plugin>
+
