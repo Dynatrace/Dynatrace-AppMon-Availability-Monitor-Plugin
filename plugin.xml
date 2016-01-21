@@ -2,33 +2,41 @@
 <?eclipse version="3.2"?>
 <!-- plugin.xml file written by dynaTrace Client 4.1.0 -->
 <plugin>
-  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.mycompany.myplugin.AM" name="Availability Monitor">
+  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.dynatrace.plugins.hostavailability" name="Host Availability Monitor">
     <information>
       <category value="" />
-      <description value="Does a ping check to make sure that a host is available." />
+      <description value="Does a ping check to make sure that a target server host is available.&#xA;Has metrics for Availability (percent) and Availability Violations (when Avail is zero).&#xA;Availability is based on 4 tests i.e Successful DNS lookup, Reverse DNS, TCP Connect and Ping. &#xA;&#xA;Create a chart with Avail and Violation to provide an overall SLA dashboard for exec audience and plot individual measures like Ping, TCP Connect, DNS and Reverse DNS to get individual measures.    " />
       <supportlevel value="unsupported" />
-      <displayname value="Availability Monitor" />
+      <displayname value="Host Availability Monitor" />
     </information>
     <configuration>
-      <property key="doTCPCheck" label="TCP Check" type="boolean" description="If checked the plugin will check to see if a TCP connection can be made to the specified server." default="false" />
-      <property key="ReturnTime" label="Max TCP Return Time" type="string" description="The max allowed time for the response to the ping in ms." default="500">
+      <property key="doTCPCheck" label="Execute TCP Check" type="boolean" description="If checked the plugin will check to see if a TCP connection can be made to the specified server." default="false" />
+      <property key="ReturnTime" label="Max TCP Return Time" type="string" description="The max allowed time for the response to the ping in ms." default="500" multiline="false">
         <visibility>
           <rule key="doTCPCheck" value="true" />
         </visibility>
       </property>
+      <property key="doPingTest" label="Execute Ping Test" type="boolean" description="Execute PING test on the target Host" default="false" />
+      <property key="pingWaitTime" label="Ping Wait Time (secs)" type="string" description="Max time in seconds for PING command to wait before aborting" default="5" multiline="false">
+        <visibility>
+          <rule key="doPingTest" value="true" />
+        </visibility>
+      </property>
+      <property key="doReverseDNSTest" label="Execute Reverse DNS Check" type="boolean" description="My property description ..." default="false" />
     </configuration>
   </extension>
-  <extension point="com.dynatrace.diagnostics.pdk.monitor" id="com.mycompany.myplugin.AM.monitor" name="Availability Monitor">
-    <plugin configid="com.mycompany.myplugin.AM" class="com.mycompany.myplugin.AM" />
+  <extension point="com.dynatrace.diagnostics.pdk.monitor" id="com.dynatrace.plugins.hostavailability.monitor" name="Host Availability Monitor">
+    <plugin configid="com.dynatrace.plugins.hostavailability" class="com.mycompany.myplugin.AM" />
   </extension>
-  <extension point="com.dynatrace.diagnostics.pdk.monitormetricgroup" id="com.mycompany.myplugin.AM.monitor.metricgroup2" name="Availability Monitor">
-    <metricgroup monitorid="com.mycompany.myplugin.AM.monitor">
-      <metric defaultrate="purepath" name="TCP Check" unit="number" description="Returns a 1 if the server is reachable on TCP port 7 and a 0 if the server is not reachable" />
+  <extension point="com.dynatrace.diagnostics.pdk.monitormetricgroup" id="com.dynatrace.plugins.hostavailability.metricgroup1" name="Availability Monitor">
+    <metricgroup monitorid="com.dynatrace.plugins.hostavailability.monitor">
       <metric defaultrate="purepath" name="TCP Lock Time" unit="ms" description="Returns the time taken to secure a Socket Lock on TCP Port 7" />
-      <metric defaultrate="purepath" name="DNS Resolved" unit="number" description="Returns a 1 if the server DNS name is resolvable and a 0 if the server is not resolvable" />
-      <metric defaultrate="purepath" name="Reverse DNS Resolved" unit="number" description="Returns a 1 if the server DNS name is resolvable and a 0 if the server is not resolvable" />
-      <metric defaultrate="purepath" name="Ping Check" unit="number" description="Returns a 1 if the ping to the server was successful" />
+      <metric defaultrate="purepath" name="Availability" unit="percent" description="Availability of Host (Success = 100% or Failure = 0%)" />
+      <metric defaultrate="purepath" name="Violation" unit="number" description="Violation of 100% Availability" />
+      <metric defaultrate="purepath" name="Reverse DNS Violation" unit="number" description="My metric description ..." />
+      <metric defaultrate="purepath" name="Ping Violation" unit="number" description="Count of no of times Ping failed" />
+      <metric defaultrate="purepath" name="DNS Resolution Violation" unit="number" />
+      <metric defaultrate="purepath" name="TCP Connect Violation" unit="number" description="My metric description ..." />
     </metricgroup>
   </extension>
 </plugin>
-

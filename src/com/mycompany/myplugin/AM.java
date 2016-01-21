@@ -16,11 +16,15 @@ public class AM extends AvailMonitor implements Monitor {
 
 	private static final Logger log = Logger.getLogger(AM.class.getName());
 	private static final String METRIC_GROUP = "Availability Monitor";
-	private static final String MSR_TCP = "TCP Check";
-	private static final String MSR_TRIP = "TCP Lock Time";
-	private static final String MSR_DNS = "DNS Resolved";
-	private static final String MSR_REV_DNS = "Reverse DNS Resolved";
-	private static final String MSR_PING = "Ping Check";
+
+//Measures to be used.
+	private static final String MSR_AVAILABILITY = "Availability";
+	private static final String MSR_VIOLATION = "Violation";
+	private static final String MSR_DNS_RESOLUTION_VIOLATION = "DNS Resolution Violation";
+	private static final String MSR_PING_VIOLATION = "Ping Violation";
+	private static final String MSR_REVERSE_DNS_VIOLATION = "Reverse DNS Violation";
+	private static final String MSR_TCP_CONNECT_VIOLATION = "TCP Connect Violation";
+
 
 	@Override
 	public Status setup(MonitorEnvironment env) throws Exception {
@@ -32,26 +36,35 @@ public class AM extends AvailMonitor implements Monitor {
 		Status result = super.execute(env);
 
 		Collection<MonitorMeasure> measures;
-		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_TCP)) != null) {
+		
+		//Active Measures.
+		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_AVAILABILITY)) != null) {
 			for (MonitorMeasure measure : measures)
-				measure.setValue(returnTCPConnect());
+				measure.setValue(this.getAvailability());
 		}
-		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_TRIP)) != null) {
+		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_VIOLATION)) != null) {
 			for (MonitorMeasure measure : measures)
-				measure.setValue(returnTrip());
+				measure.setValue(this.getAvailabilityViolation());
 		}
-		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_DNS)) != null) {
+		
+		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_REVERSE_DNS_VIOLATION)) != null) {
 			for (MonitorMeasure measure : measures)
-				measure.setValue(returnDNSConnect());
+				measure.setValue(this.getReverseDNSConnectViolation());
 		}
-		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_REV_DNS)) != null) {
+		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_PING_VIOLATION)) != null) {
 			for (MonitorMeasure measure : measures)
-				measure.setValue(returnReverseDNSConnect());
+				measure.setValue(this.getPingViolation());
 		}
-		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_PING)) != null) {
+		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_DNS_RESOLUTION_VIOLATION)) != null) {
 			for (MonitorMeasure measure : measures)
-				measure.setValue(returnPing());
+				measure.setValue(this.getDNSResolutionViolation());
 		}
+		if ((measures = env.getMonitorMeasures(METRIC_GROUP, MSR_TCP_CONNECT_VIOLATION)) != null) {
+			for (MonitorMeasure measure : measures)
+				measure.setValue(this.getTCPConnectViolation());
+		}
+
+		
 
 		return result;
 	}

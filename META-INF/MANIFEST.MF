@@ -1,9 +1,10 @@
 Manifest-Version: 1.0
 Require-Bundle: com.dynatrace.diagnostics.sdk
 Bundle-Vendor: dynaTrace Community
-Bundle-ClassPath: .,lib/com.dynatrace.diagnostics.sdk.jar
-Bundle-Version: 1.0.0
-Bundle-Name: Availability Monitor
+Bundle-ClassPath: .
+Bundle-Version: 1.2.0
+Bundle-Name: Host Availability Monitor
 Bundle-ManifestVersion: 2
-Bundle-SymbolicName: com.mycompany.myplugin.AM;singleton:=true
+Bundle-SymbolicName: com.dynatrace.plugins.hostavailability;singleton:
+ =true
 
