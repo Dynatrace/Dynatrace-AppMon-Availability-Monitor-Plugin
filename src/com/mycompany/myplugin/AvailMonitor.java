@@ -1,13 +1,13 @@
 package com.mycompany.myplugin;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-
+import java.nio.channels.IllegalBlockingModeException;
+import java.util.logging.Logger;
 
 import com.dynatrace.diagnostics.pdk.PluginEnvironment;
 import com.dynatrace.diagnostics.pdk.Status;
@@ -39,6 +39,7 @@ public class AvailMonitor {
 	int pingViolation = 0;
 	int tcpConnectViolation = 0;
 	int dnsResolutionViolation = 0;
+	int port =  0;
 	
 	
 	
@@ -59,19 +60,18 @@ public class AvailMonitor {
 		doPingTest = env.getConfigBoolean("doPingTest");
 		pingMaxWaitTime = Integer.parseInt(env.getConfigString("pingWaitTime"));
 		doReverseDNSTest = env.getConfigBoolean("doReverseDNSTest");
+		port = Integer.parseInt(env.getConfigString("port"));
 		
 		String server = env.getHost().getAddress();
 		InetAddress address;
+		address = InetAddress.getByName(server);
+		
+		InetAddress ip = InetAddress.getByName(address.getHostAddress());
+		String ipName = ip.getHostName();
+		
 		try
-		{
-			address = InetAddress.getByName(server);
-			
-			InetAddress ip = InetAddress.getByName(address.getHostAddress());
-			String ipName = ip.getHostName();
-
-			
+		{			
 			if (this.doReverseDNSTest) {
-
 				if(ipName.equalsIgnoreCase(address.getHostName()))
 				{
 					ReverseDNS = true;
@@ -83,25 +83,29 @@ public class AvailMonitor {
 					log.severe("Reverse DNS Failed. ipName = " + ipName + ". Address.getHostName() = " + address.getHostName() + 
 					" server: " + server + " ip: " + ip);
 				}
-			}
-			
-			
+			}			
 
 			if(this.doTCPCheck)
 			{
+				SocketAddress socketAddress = new InetSocketAddress(address, port);
+				Socket socket = new Socket();
+				boolean available = true;
 				
-				int holdingit = Integer.parseInt(env.getConfigString(CONFIG_TIME));
-				long startTime = 0;
-				long endTime = 0;
-				boolean reachable = false;
-				startTime = System.currentTimeMillis();
-				reachable = address.isReachable(holdingit);
-				endTime = System.currentTimeMillis();
-				String Timers = new Long(endTime - startTime).toString();
+				try {
+					socket.connect(socketAddress);
+				} catch (IOException e) {
+					available = false;
+					log.severe("[IOException] - doTCPCheck - Not reachable address: " + address + "\n" + e.getMessage());
+				}catch (IllegalArgumentException e) {
+					available = false;
+					log.severe("[IllegalArgumentException] - doTCPCheck - Not reachable address: " + address + "\n" + e.getMessage());
+				}catch (IllegalBlockingModeException e) {
+					available = false;
+					log.severe("[IllegalBlockingModeException] - doTCPCheck - Not reachable address: " + address + "\n" + e.getMessage());
+				}
+				socket.close();
 				
-
-				tcpRoundTripTime = Integer.parseInt(Timers);
-				if(reachable)
+				if(available)
 				{
 					TCPConnectStatus = true;
 				}
@@ -109,7 +113,7 @@ public class AvailMonitor {
 				{
 					TCPConnectStatus = false;
 					tcpConnectViolation++;
-					log.severe("Not reachable address: " + address );
+					log.severe("Not reachable address: " + address + " Port: " + port);
 				}
 				
 			}
@@ -117,64 +121,43 @@ public class AvailMonitor {
 			DNSResolve = true;
 			
 		}
-		catch (UnknownHostException uex)
-    		{
+		catch (UnknownHostException uex){
 			log.severe("UnknownHostException. Error occurred: Server " + env.getHost().getAddress() + " was not resolvable. " + uex.getMessage());
 			result = new Status(Status.StatusCode.PartialSuccess);
 			result.setMessage("Error: Server unreachable or unresolvable");
 			DNSResolve = false;
-			dnsResolutionViolation++;
-			
+			dnsResolutionViolation++;			
     		}
-		catch (Exception ex)
-		{
+		catch (Exception ex){
 			log.severe("Error occurred: Server " + env.getHost().getAddress() + " was not resolvable. " + ex.getMessage());
 			result = new Status(Status.StatusCode.PartialSuccess);
 			result.setMessage("Error: Server unreachable or unresolvable");
 			DNSResolve = false;
-			dnsResolutionViolation++;
-		
-		}
-
-		
+			dnsResolutionViolation++;		
+		}		
 		
 		/* If PING is allowed in the Data Center. And if */
 		if(doPingTest && DNSResolve)
 		{
-			String pingArgs = " -w " + pingMaxWaitTime + " " + server;
 			try {
-			
-	            Process proc = new ProcessBuilder("ping", pingArgs).start();
-			
-								
-	            int exitValue = proc.waitFor();
-	        
-	            if(exitValue == 0)
-	            {
-	                Ping = true;
-	            }
-	            else
-	            {
-	            	Ping = false;
-	            	pingViolation++;
-	            }
-	        } catch (IOException e) {
-	        	Ping = false;
-	        	pingViolation++;
-	            log.severe("IOException: Cannot PING Args: " + pingArgs + ". Message: " + e.getMessage());
-	            e.printStackTrace();
-	        } catch (InterruptedException e) {
-	        	Ping = false;
-	        	pingViolation++;
-	        	log.severe("InterruptedException: Cannot PING Args: " + pingArgs + ". Message: " + e.getMessage());
-	            e.printStackTrace();
-	        }
-
-			if(Ping == false)
-			{
-				log.severe("Pinging " + env.getHost().getAddress() + " Failure : ping Args: " + pingArgs );
-				result = new Status(Status.StatusCode.PartialSuccess);
+				if(address.isReachable(pingMaxWaitTime))					
+					log.severe("Pinging: ");
+				else{
+					Ping = false;
+					pingViolation++;
+				}					
+			}  catch (IOException e) {
+				Ping = false;
+				pingViolation++;
+				log.severe("[IOException] - doPingTest - Not reachable address: " + address + "\n" + e.getMessage());
+			}catch (IllegalArgumentException e) {
+				Ping = false;
+				pingViolation++;
+				log.severe("[IllegalArgumentException] - doPingTest - Not reachable address: " + address + "\n" + e.getMessage());
 			}
+		}else{
+			log.severe("NO Pinging: ");
+			pingViolation++;
 		}
 		
 		return result;
@@ -206,10 +189,10 @@ public class AvailMonitor {
 	 */
 	protected int getAvailability() {
 		
-		/*	
+			
 		log.severe("getAvail reverseDNSViolation: " + reverseDNSViolation + " dnsResolutionViolation: " + dnsResolutionViolation + 
 		" pingViolation:" + pingViolation + " tcpConnectViolation: " + tcpConnectViolation);
-		*/
+		
 				
 		if((reverseDNSViolation == 0) && (pingViolation == 0) && (tcpConnectViolation == 0) && (dnsResolutionViolation == 0)) {
 			this.availability = 100;

@@ -5,24 +5,25 @@
   <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.dynatrace.plugins.hostavailability" name="Host Availability Monitor">
     <information>
       <category value="" />
-      <description value="Does a ping check to make sure that a target server host is available.&#xA;Has metrics for Availability (percent) and Availability Violations (when Avail is zero).&#xA;Availability is based on 4 tests i.e Successful DNS lookup, Reverse DNS, TCP Connect and Ping. &#xA;&#xA;Create a chart with Avail and Violation to provide an overall SLA dashboard for exec audience and plot individual measures like Ping, TCP Connect, DNS and Reverse DNS to get individual measures.    " />
+      <description value="Does a ping check to make sure that a target server host is available.&#xA;Has metrics for Availability (percent) and Availability Violations (when Avail is zero).&#xA;Availability is based on 4 tests i.e Successful DNS lookup, Reverse DNS, TCP Connect and Ping. &#xA;Upgraded telnet&#xA;&#xA;Create a chart with Avail and Violation to provide an overall SLA dashboard for exec audience and plot individual measures like Ping, TCP Connect, DNS and Reverse DNS to get individual measures.    " />
       <supportlevel value="unsupported" />
       <displayname value="Host Availability Monitor" />
     </information>
     <configuration>
-      <property key="doTCPCheck" label="Execute TCP Check" type="boolean" description="If checked the plugin will check to see if a TCP connection can be made to the specified server." default="false" />
+      <property key="doTCPCheck" label="Execute TCP Check" type="boolean" description="If checked the plugin will check to see if a TCP connection can be made to the specified server." default="true" />
       <property key="ReturnTime" label="Max TCP Return Time" type="string" description="The max allowed time for the response to the ping in ms." default="500" multiline="false">
         <visibility>
           <rule key="doTCPCheck" value="true" />
         </visibility>
       </property>
       <property key="doPingTest" label="Execute Ping Test" type="boolean" description="Execute PING test on the target Host" default="false" />
-      <property key="pingWaitTime" label="Ping Wait Time (secs)" type="string" description="Max time in seconds for PING command to wait before aborting" default="5" multiline="false">
+      <property key="pingWaitTime" label="Ping Wait Time (ms)" type="string" description="Max time in seconds for PING command to wait before aborting" default="5000" multiline="false">
         <visibility>
           <rule key="doPingTest" value="true" />
         </visibility>
       </property>
       <property key="doReverseDNSTest" label="Execute Reverse DNS Check" type="boolean" description="My property description ..." default="false" />
+      <property key="port" label="TCP Port" type="string" description="The number of TCP of the host the will be tested telnet command.&#xA;example:&#xA;127.0.0.1:80&#xA;TCP = 80" default="" multiline="false" />
     </configuration>
   </extension>
   <extension point="com.dynatrace.diagnostics.pdk.monitor" id="com.dynatrace.plugins.hostavailability.monitor" name="Host Availability Monitor">
