@@ -1,4 +1,4 @@
-##Availability Monitor Plugin
+## Availability Monitor Plugin
 
 The availability monitor can be used to test if a server can be pinged, and will also check to ensure that DNS and reverseDNS capabilities are functioning.  
 
